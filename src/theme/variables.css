@@ -3,8 +3,12 @@ http://ionicframework.com/docs/theming/ */
 
 /** Ionic CSS Variables **/
 :root {
+  --ion-text-color: #ffd700;
+  --ion-background-color: #ca2c92;
+  --ion-font-family: "Lucida Console", Courier, monospace;
+
   /** primary **/
-  --ion-color-primary: #ff0000;
+  --ion-color-primary: #ccff00;
   --ion-color-primary-rgb: 56, 128, 255;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
