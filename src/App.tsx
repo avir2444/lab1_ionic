@@ -23,19 +23,23 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 import { ItemProvider } from './todo/ItemProvider';
+import {AuthProvider, Login, PrivateRoute} from "./auth";
 
 const App: React.FC = () => (
   <IonApp>
-    <ItemProvider>
       <IonReactRouter>
         <IonRouterOutlet>
-          <Route path="/jucatori" component={ItemList} exact={true} />
-          <Route path="/jucator" component={ItemEdit} exact={true} />
-          <Route path="/jucator/:id" component={ItemEdit} exact={true} />
-          <Route exact path="/" render={() => <Redirect to="/jucatori" />} />
+          <AuthProvider>
+            <Route path="/login" component={Login} exact={true}/>
+            <ItemProvider>
+              <PrivateRoute path="/jucatori" component={ItemList} exact={true} />
+              <PrivateRoute path="/jucator" component={ItemEdit} exact={true} />
+              <PrivateRoute path="/jucator/:id" component={ItemEdit} exact={true} />
+            </ItemProvider>
+            <Route exact path="/" render={() => <Redirect to="/jucatori" />} />
+          </AuthProvider>
         </IonRouterOutlet>
       </IonReactRouter>
-    </ItemProvider>
   </IonApp>
 );
 
