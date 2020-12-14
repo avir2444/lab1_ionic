@@ -4,13 +4,13 @@ import {
   IonButton,
   IonContent,
   IonFab,
-  IonFabButton,
-  IonHeader,
+  IonFabButton, IonItemDivider,
+  IonHeader, IonCheckbox,
   IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel,
   IonList, IonLoading,
   IonPage, IonSearchbar, IonSelect, IonSelectOption,
   IonTitle,
-  IonToolbar
+  IonToolbar, IonToast
 } from '@ionic/react';
 import { football } from 'ionicons/icons';
 import Item from './Item';
@@ -18,6 +18,8 @@ import { getLogger } from '../core';
 import { ItemContext } from './ItemProvider';
 import { AuthContext } from "../auth";
 import {ItemProps} from "./ItemProps";
+import {useNetwork} from "./useNetwork";
+import {NetworkStatus} from "@capacitor/core";
 
 const log = getLogger('ItemList');
 
@@ -30,6 +32,8 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
   const [filter, setFilter] = useState<string | undefined>("orice varsta");
   const selectOptions = ["< 18 ani", ">= 18 ani", "orice varsta"];
   const [searchText, setSearchText] = useState<string>("");
+
+  const {networkStatus} = useNetwork();
 
   const [itemsMatch, setItemsMatch] = useState<ItemProps[]>([]);
 
@@ -90,6 +94,10 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
         <IonToolbar>
           <IonButton slot="end" onClick={handleLogout}>Logout</IonButton>
           <IonTitle>Cupa Campionilor Danone</IonTitle>
+          <IonItemDivider>
+            <IonLabel color="light">Network status: </IonLabel>
+            <IonCheckbox  color="light" checked={networkStatus.connected} disabled={true}></IonCheckbox>
+          </IonItemDivider>
         </IonToolbar>
         <IonSearchbar color="dark" value={searchText} debounce={750} onIonChange={(e) => setSearchText(e.detail.value!)}/>
         <IonItem color="dark">
@@ -130,6 +138,12 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
             <IonIcon icon={football} />
           </IonFabButton>
         </IonFab>
+        <IonToast
+            //isOpen={notification}
+            isOpen={true}
+            message="Item is stored locally"
+            duration={2000}
+        />
       </IonContent>
     </IonPage>
   );

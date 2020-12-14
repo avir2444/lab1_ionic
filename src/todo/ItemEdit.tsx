@@ -7,7 +7,7 @@ import {
   IonInput,
   IonLoading,
   IonPage,
-  IonTitle,
+  IonTitle, IonToast,
   IonToolbar
 } from '@ionic/react';
 import { getLogger } from '../core';

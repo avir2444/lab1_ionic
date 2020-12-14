@@ -1,13 +1,17 @@
-import React, {useCallback, useContext, useEffect, useReducer} from 'react';
+import React, {useCallback, useContext, useEffect, useReducer, useState} from 'react';
 import PropTypes from 'prop-types';
 import { getLogger } from '../core';
 import { ItemProps } from './ItemProps';
 import { createItem, getItems, newWebSocket, updateItem } from './itemApi';
 import { AuthContext } from '../auth';
-import {resolve} from "path";
+import { alertController } from '@ionic/core';
+import {Plugins} from "@capacitor/core";
+import {useNetwork} from "./useNetwork";
+import {IonAlert, IonCard, IonContent, IonPage, IonToast} from "@ionic/react";
+const { Storage } = Plugins;
+//import {ToastController} from "@ionic/angular";
 
 const log = getLogger('ItemProvider');
-
 type SaveItemFn = (item: ItemProps) => Promise<any>;
 
 export interface ItemsState {
@@ -77,9 +81,11 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { items, fetching, fetchingError, saving, savingError } = state;
 
+  const {networkStatus} = useNetwork();
+
   useEffect(getItemsEffect, [token]);
   useEffect(wsEffect, [token]);
-  const saveItem = useCallback<SaveItemFn>(saveItemCallback, [token]);
+  const saveItem = useCallback<SaveItemFn>(saveItemCallback, [token, networkStatus]);
 
   const value = { items, fetching, fetchingError, saving, savingError, saveItem };
   log('returns');
@@ -110,18 +116,73 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
         }
       } catch (error) {
         log('fetchItems failed');
-        dispatch({ type: FETCH_ITEMS_FAILED, payload: { error } });
+        //dispatch({ type: FETCH_ITEMS_FAILED, payload: { error } });
+        let realKeys: string[] = [];
+        await Storage.keys().then((keys) => {
+          return keys.keys.forEach(function (value){
+            if(value !== "user")
+              realKeys.push(value);
+          });
+        });
+
+        let values: string[] = [];
+        for (const key1 of realKeys) {
+          await Storage.get({key: key1}).then((value)=>{
+            // @ts-ignore
+            values.push(value.value);
+          })
+        }
+
+        const items: ItemProps[] = [];
+        for(const value of values){
+          var item = JSON.parse(value);
+          items.push(item);
+        }
+
+        console.log(items);
+
+        if (!canceled) {
+          dispatch({ type: FETCH_ITEMS_SUCCEEDED, payload: { items } });
+        }
       }
     }
   }
-
+/*
+  async function showToast() {
+    let toastController = new ToastController();
+    const toast = await toastController.create({
+      message: 'Mmmm, buttered toast',
+      duration: 1000,
+    });
+    await toast.present();
+  }
+*/
   async function saveItemCallback(item: ItemProps) {
     try {
+      //notification= false;
       log('saveItem started');
-      dispatch({ type: SAVE_ITEM_STARTED });
-      const savedItem = await (item._id ? updateItem(token, item) : createItem(token, item));
-      log('saveItem succeeded');
-      dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item: savedItem } });
+      if(networkStatus.connected){
+        log(networkStatus.connectionType);
+        const savedItem = await (item._id ? updateItem(token, item) : createItem(token, item));
+        log('saveItem succeeded');
+        dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item: savedItem } });
+      }
+      else{
+        await Storage.set({
+          key: item._id!,
+          value: JSON.stringify({
+            id: item._id,
+            nume: item.nume,
+            varsta: item.varsta,
+            echipa: item.echipa,
+            pozitie: item.pozitie
+          }),
+        });
+        //notification = true;
+        log('saveItem succeeded ONLY on local storage');
+        dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item: item } });
+      }
+
     } catch (error) {
       log('saveItem failed');
       dispatch({ type: SAVE_ITEM_FAILED, payload: { error } });
