@@ -10,7 +10,7 @@ import {
   IonList, IonLoading,
   IonPage, IonSearchbar, IonSelect, IonSelectOption,
   IonTitle,
-  IonToolbar, IonToast
+  IonToolbar, IonToast, IonRow, IonCol, IonImg, IonGrid
 } from '@ionic/react';
 import { football } from 'ionicons/icons';
 import Item from './Item';
@@ -20,6 +20,7 @@ import { AuthContext } from "../auth";
 import {ItemProps} from "./ItemProps";
 import {useNetwork} from "./useNetwork";
 import {NetworkStatus} from "@capacitor/core";
+import {usePhotoGallery} from "./usePhotoGallery";
 
 const log = getLogger('ItemList');
 
@@ -36,6 +37,8 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
   const {networkStatus} = useNetwork();
 
   const [itemsMatch, setItemsMatch] = useState<ItemProps[]>([]);
+
+  const { photos } = usePhotoGallery();
 
   const { logout } = useContext(AuthContext);
   const handleLogout = () => {
